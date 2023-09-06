@@ -1,0 +1,108 @@
+include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+int auth(){
+    char command[256];
+    char output[512];
+    snprintf(command, sizeof(command), "getent group sudo");
+    FILE *fp = popen(command, "r");
+    if (fp == NULL) {
+        perror("popen \n");
+        return 1;
+    }
+    fgets(output, sizeof(output), fp);
+    printf("Output: %s\n", output);
+    pclose(fp);
+
+    char firstDelimiter[] = ":";
+    char secDelimiter[] = ",";
+    char *token = strtok(output, firstDelimiter);
+    for (int i = 0; i < 3; i++) {
+        token = strtok(NULL, firstDelimiter);
+    }
+    char *sudoMem[100] = { NULL };
+    int position = 0;
+    token = strtok(token, secDelimiter);
+    while (token != NULL) {
+        sudoMem[position] = token;
+        position = position + 1;
+        token = strtok(NULL, secDelimiter);
+    }
+
+    printf("Sudo Accounts \n");
+    position = 0;
+    while ( sudoMem[position] != NULL) {
+        printf("Index:%d, Name:%s \n", position + 1, sudoMem[position]);
+        position = position + 1;
+    }
+    printf("Which is your account?[Enter the Index No]: ");
+    if ( scanf("%d", &position) != 1 ) {
+        printf("Invalid option, Closing system now!!! \n");
+        exit(1);
+    }
+    if (position <= 0 ) {
+        printf("Invalid option, Closing system now!!! \n");
+        exit(1);
+    } else if ( sudoMem[position - 1] != NULL ) {
+        printf("%s \n", sudoMem[position - 1]);
+        char command[256];
+        strcpy(command, "su");
+        strcat(command, " ");
+        strcat(command, sudoMem[position - 1]);
+        printf("%s \n", command);
+        system(command);
+    } else {
+        printf("Invalid option, Closing system now!!! \n");
+        exit(1);
+    }
+}
+ 
+int getPer(char *argv[]){
+    const char *file_path = argv[1];
+    printf("Permissions of '%s' \n", file_path);
+    char command[256];
+    snprintf(command, sizeof(command), "ls -l %s", file_path);
+
+    FILE *fp = popen(command, "r");
+    if (fp == NULL) {
+        perror("popen \n");
+        return 1;
+    }
+
+    char output[512];
+    fgets(output, sizeof(output), fp);
+    printf("Output: %s \n",output); 
+    pclose(fp);
+
+    char delimiter[] = " ";
+    char *token = strtok(output, delimiter);
+    printf("=========================== \n");
+    printf("Permissions: %s \n", token);
+
+    char targetCharS = 's';
+    char targetCharB = 'S';
+    if ( (strchr(token, targetCharS) != NULL) || (strchr(token, targetCharB) != NULL) ) {
+        printf("File permission contain SUID. \n");
+        printf("Implementing Mitigation Now !!! \n");
+        printf("=========================== \n");
+        auth();
+    } else {
+        printf("File permission does not contain SUID. \n");
+        printf("Continue running the code. \n");
+    }
+    return 0;
+
+}
+
+int main(int argc, char *argv[]){
+    if (argc < 2) {
+        printf("Please enter a file path as an argument. \n");
+        exit(1);
+    }
+    getPer(argv);
+    return 0;
+}

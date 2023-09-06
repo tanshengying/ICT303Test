@@ -5,10 +5,6 @@ include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-//Hello Adrian here
-// Hi Ethan
-//Yo whatsup
-
 int auth(){
     char command[256];
     char output[512];

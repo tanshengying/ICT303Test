@@ -6,6 +6,7 @@ include <stdio.h>
 #include <unistd.h>
 
 //Hello Adrian here
+// Hi Ethan
 
 int auth(){
     char command[256];

@@ -5,7 +5,7 @@ include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-//EDIT et
+//Hello
 
 int auth(){
     char command[256];
